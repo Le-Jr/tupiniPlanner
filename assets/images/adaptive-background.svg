@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#0F3A2A"/>
+      <stop offset="0.55" stop-color="#071A14"/>
+      <stop offset="1" stop-color="#030C09"/>
+    </radialGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse">
+      <path d="M64 0 H0 V64" fill="none" stroke="#00C653" stroke-opacity="0.09" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#grid)"/>
+  <!-- pixel corners -->
+  <path d="M96 166 V96 H166" fill="none" stroke="#00FF6A" stroke-opacity="0.55" stroke-width="12"/><path d="M928 166 V96 H858" fill="none" stroke="#00FF6A" stroke-opacity="0.55" stroke-width="12"/><path d="M96 858 V928 H166" fill="none" stroke="#00FF6A" stroke-opacity="0.55" stroke-width="12"/><path d="M928 858 V928 H858" fill="none" stroke="#00FF6A" stroke-opacity="0.55" stroke-width="12"/></svg>

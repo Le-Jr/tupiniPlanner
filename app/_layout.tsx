@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
 import { Inter_400Regular } from "@expo-google-fonts/inter/400Regular";
 import { Inter_500Medium } from "@expo-google-fonts/inter/500Medium";
 import { Inter_700Bold } from "@expo-google-fonts/inter/700Bold";
@@ -15,8 +16,13 @@ import { Toast } from "../src/components/Toast";
 import { Onboarding } from "../src/features/Onboarding";
 import { colors, fonts } from "../src/theme/tokens";
 export { ErrorBoundary } from "expo-router";
+// Keep the native splash until fonts and the local database are ready.
+void SplashScreen.preventAutoHideAsync().catch(() => {});
 function Shell() {
   const { ready, state, error, clearError, retryInitialization } = useApp();
+  useEffect(() => {
+    if (ready || error) void SplashScreen.hideAsync().catch(() => {});
+  }, [ready, error]);
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style="light" />

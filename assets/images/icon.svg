@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#0F3A2A"/>
+      <stop offset="0.55" stop-color="#071A14"/>
+      <stop offset="1" stop-color="#030C09"/>
+    </radialGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse">
+      <path d="M64 0 H0 V64" fill="none" stroke="#00C653" stroke-opacity="0.09" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#grid)"/>
+  <!-- pixel corners -->
+  <path d="M96 166 V96 H166" fill="none" stroke="#00FF6A" stroke-opacity="0.55" stroke-width="12"/><path d="M928 166 V96 H858" fill="none" stroke="#00FF6A" stroke-opacity="0.55" stroke-width="12"/><path d="M96 858 V928 H166" fill="none" stroke="#00FF6A" stroke-opacity="0.55" stroke-width="12"/><path d="M928 858 V928 H858" fill="none" stroke="#00FF6A" stroke-opacity="0.55" stroke-width="12"/>
+  <g transform="translate(0 0) scale(1)" filter="url(#glow)">
+    <!-- prompt chevron -->
+    <polyline points="300,470 410,560 300,650" fill="none" stroke="#00FF6A"
+      stroke-width="46" stroke-linecap="square" stroke-linejoin="miter"/>
+    <!-- cursor -->
+    <rect x="452" y="622" width="210" height="44" fill="#00FF6A"/>
+    <!-- sprout growing from the cursor -->
+    <path d="M557 622 V430" stroke="#00FF6A" stroke-width="30" fill="none" stroke-linecap="square"/>
+    <path d="M557 520 C470 520 420 470 410 380 C500 385 550 430 557 520 Z" fill="#00FF6A"/>
+    <path d="M557 470 C560 370 620 320 724 310 C720 410 660 470 557 470 Z" fill="#00FF6A"/>
+  </g></svg>
