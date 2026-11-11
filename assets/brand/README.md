@@ -1,0 +1,3 @@
+# Marca provisória
+O componente Brand usa `>_` e um broto vetorial ORIGINAL como placeholder substituível; não é a logo oficial da Tupinicode. Nenhum arquivo do manual ou logo oficial foi fornecido. Para substituir: adicione o asset autorizado nesta pasta e altere Brand em src/components/ui.tsx preservando acessibilidade e proporções.
+As quatro reações vetoriais em src/components/ReactionModal.tsx são desenhos originais por código para este projeto, sem mídia de terceiros ou referência a atores. Fontes Inter e JetBrains Mono são distribuídas pelos respectivos pacotes @expo-google-fonts (SIL Open Font License); ícones Ionicons, MIT. Nenhum asset remoto é carregado em execução.

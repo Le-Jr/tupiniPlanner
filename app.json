@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "TupiniPlanner",
+    "slug": "tupiniplanner",
+    "version": "1.0.0",
+    "scheme": "tupiniplanner",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "android": {
+      "package": "com.tupinicode.tupiniplanner",
+      "permissions": [],
+      "blockedPermissions": ["android.permission.RECORD_AUDIO"],
+      "allowBackup": false
+    },
+    "plugins": ["expo-router", "expo-sqlite", "expo-font"],
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
