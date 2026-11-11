@@ -29,6 +29,16 @@ interface Context {
   retryInitialization: () => void;
   celebrate: (badge: string) => void;
   closeReward: () => void;
+  /** True when decorative motion is allowed (app setting + OS reduce motion). */
+  animate: boolean;
+  haptic: (kind?: "tap" | "success" | "select") => void;
+  toast: Toast | null;
+  notify: (text: string, tone?: Toast["tone"]) => void;
+}
+export interface Toast {
+  id: number;
+  text: string;
+  tone: "success" | "info" | "reward";
 }
 const AppContext = createContext<Context | null>(null);
 function syncAgenda(s: State, today: string) {
@@ -57,6 +67,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [today, setToday] = useState(localDate());
   const [systemReduce, setSystemReduce] = useState(false);
   const [reward, setReward] = useState<string | null>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const pending = useRef(0);
   const mutate = useCallback((fn: Mutation) => {
     pending.current++;
@@ -136,6 +150,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         Haptics.NotificationFeedbackType.Success,
       ).catch(() => {});
   }, []);
+  const settings = state.settings[0];
+  const animate =
+    !!settings?.animationsEnabled && !settings?.reducedMotion && !systemReduce;
+  const haptic = useCallback((kind: "tap" | "success" | "select" = "tap") => {
+    if (!current.current.settings[0]?.hapticsEnabled) return;
+    const done =
+      kind === "success"
+        ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+        : kind === "select"
+          ? Haptics.selectionAsync()
+          : Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void done.catch(() => {});
+  }, []);
+  const notify = useCallback(
+    (text: string, tone: Toast["tone"] = "success") => {
+      clearTimeout(toastTimer.current);
+      setToast({ id: Date.now(), text, tone });
+      toastTimer.current = setTimeout(() => setToast(null), 2600);
+    },
+    [],
+  );
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
   return (
     <AppContext.Provider
       value={{
@@ -155,11 +191,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         },
         celebrate,
         closeReward: () => setReward(null),
+        animate,
+        haptic,
+        toast,
+        notify,
       }}
     >
       {children}
     </AppContext.Provider>
   );
+}
+/** Same as useApp, but safe outside the provider (e.g. font-loading splash). */
+export function useOptionalApp() {
+  return useContext(AppContext);
 }
 export function useApp() {
   const c = useContext(AppContext);

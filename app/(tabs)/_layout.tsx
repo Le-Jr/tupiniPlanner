@@ -1,28 +1,65 @@
 import React from "react";
+import { View } from "react-native";
 import { Tabs } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, type IconName } from "../../src/components/ui";
-import { colors } from "../../src/theme/tokens";
+import { useApp } from "../../src/features/AppProvider";
+import { colors, fonts } from "../../src/theme/tokens";
 export default function TabLayout() {
-  const entries: { name: string; title: string; icon: IconName }[] = [
-    { name: "index", title: "Hoje", icon: "grid-outline" },
-    { name: "missions", title: "Missões", icon: "checkbox-outline" },
-    { name: "evolution", title: "Evolução", icon: "stats-chart-outline" },
-    { name: "guitar", title: "Guitarra", icon: "musical-notes-outline" },
-    { name: "profile", title: "Perfil", icon: "person-outline" },
+  const insets = useSafeAreaInsets();
+  const { haptic } = useApp();
+  const entries: {
+    name: string;
+    title: string;
+    icon: IconName;
+    active: IconName;
+  }[] = [
+    { name: "index", title: "Hoje", icon: "today-outline", active: "today" },
+    {
+      name: "missions",
+      title: "Missões",
+      icon: "checkbox-outline",
+      active: "checkbox",
+    },
+    {
+      name: "evolution",
+      title: "Evolução",
+      icon: "stats-chart-outline",
+      active: "stats-chart",
+    },
+    {
+      name: "guitar",
+      title: "Guitarra",
+      icon: "musical-notes-outline",
+      active: "musical-notes",
+    },
+    {
+      name: "profile",
+      title: "Perfil",
+      icon: "person-outline",
+      active: "person",
+    },
   ];
   return (
     <Tabs
+      screenListeners={{ tabPress: () => haptic("select") }}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.muted,
+        tabBarInactiveTintColor: colors.subtle,
         tabBarStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: colors.surface,
           borderTopColor: colors.line,
+          borderTopWidth: 1,
           paddingTop: 8,
-          minHeight: 72,
+          height: 66 + Math.max(insets.bottom, 8),
+          paddingBottom: Math.max(insets.bottom, 8),
         },
-        tabBarLabelStyle: { fontFamily: "Inter", fontSize: 10 },
+        tabBarLabelStyle: {
+          fontFamily: fonts.medium,
+          fontSize: 11,
+          marginTop: 2,
+        },
         tabBarHideOnKeyboard: true,
       }}
     >
@@ -32,8 +69,25 @@ export default function TabLayout() {
           name={e.name}
           options={{
             title: e.title,
-            tabBarIcon: ({ color }) => (
-              <Icon name={e.icon} color={color} size={22} />
+            tabBarIcon: ({ color, focused }) => (
+              <View
+                style={{
+                  width: 52,
+                  height: 30,
+                  borderRadius: 15,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: focused
+                    ? `${colors.primary}1F`
+                    : "transparent",
+                }}
+              >
+                <Icon
+                  name={focused ? e.active : e.icon}
+                  color={color}
+                  size={21}
+                />
+              </View>
             ),
           }}
         />

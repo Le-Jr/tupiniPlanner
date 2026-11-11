@@ -11,8 +11,9 @@ import { JetBrainsMono_400Regular } from "@expo-google-fonts/jetbrains-mono/400R
 import { AppProvider, useApp } from "../src/features/AppProvider";
 import { AppText, Button, Loading } from "../src/components/ui";
 import { ReactionModal } from "../src/components/ReactionModal";
+import { Toast } from "../src/components/Toast";
 import { Onboarding } from "../src/features/Onboarding";
-import { colors } from "../src/theme/tokens";
+import { colors, fonts } from "../src/theme/tokens";
 export { ErrorBoundary } from "expo-router";
 function Shell() {
   const { ready, state, error, clearError, retryInitialization } = useApp();
@@ -23,9 +24,11 @@ function Shell() {
         <View
           accessibilityLiveRegion="assertive"
           style={{
-            backgroundColor: colors.forest,
+            backgroundColor: colors.surfaceRaised,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.accent,
             padding: 18,
-            paddingTop: 38,
+            paddingTop: 44,
             gap: 10,
           }}
         >
@@ -46,8 +49,12 @@ function Shell() {
           <Stack
             screenOptions={{
               headerStyle: { backgroundColor: colors.background },
-              headerTintColor: colors.ivory,
+              headerTintColor: colors.primary,
+              headerTitleStyle: { fontFamily: fonts.bold, color: colors.ivory },
+              headerShadowVisible: false,
+              headerBackButtonDisplayMode: "minimal",
               contentStyle: { backgroundColor: colors.background },
+              animation: "slide_from_right",
             }}
           >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -59,6 +66,7 @@ function Shell() {
             />
           </Stack>
           <ReactionModal />
+          <Toast />
         </>
       )}
     </View>

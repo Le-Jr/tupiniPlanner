@@ -1,72 +1,140 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  Pressable,
   ScrollView,
+  StyleSheet,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "../features/AppProvider";
 import { AppText, Button, IconButton, styles } from "./ui";
-import { colors } from "../theme/tokens";
+import { colors, radius } from "../theme/tokens";
 export function Sheet({
   visible,
   title,
+  eyebrow,
   onClose,
   children,
 }: {
   visible: boolean;
   title: string;
+  eyebrow?: string;
   onClose: () => void;
   children: React.ReactNode;
 }) {
-  const { error, clearError } = useApp();
+  const { error, clearError, animate } = useApp();
+  const insets = useSafeAreaInsets();
+  const shown = useSharedValue(0);
+  useEffect(() => {
+    if (!visible) return;
+    shown.value = 0;
+    shown.value = animate
+      ? withTiming(1, { duration: 300, easing: Easing.out(Easing.cubic) })
+      : 1;
+  }, [visible, animate, shown]);
+  const backdrop = useAnimatedStyle(() => ({ opacity: shown.value }));
+  const panel = useAnimatedStyle(() => ({
+    transform: [{ translateY: (1 - shown.value) * 60 }],
+    opacity: 0.4 + shown.value * 0.6,
+  }));
   return (
     <Modal
       visible={visible}
       animationType="none"
       transparent
+      statusBarTranslucent
       onRequestClose={onClose}
     >
-      <SafeAreaView
-        style={{
-          flex: 1,
-          backgroundColor: "#000B",
-          justifyContent: "flex-end",
-        }}
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: colors.overlay },
+          backdrop,
+        ]}
+      >
+        <Pressable
+          accessibilityLabel="Fechar painel"
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+        />
+      </Animated.View>
+      <View
+        style={{ flex: 1, justifyContent: "flex-end" }}
+        pointerEvents="box-none"
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={{ maxHeight: "95%" }}
+          style={{ maxHeight: "92%" }}
         >
-          <View
+          <Animated.View
             accessibilityViewIsModal
-            style={{
-              backgroundColor: colors.background,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              padding: 20,
-              gap: 16,
-              maxHeight: "100%",
-              maxWidth: 760,
-              width: "100%",
-              alignSelf: "center",
-            }}
+            style={[
+              {
+                backgroundColor: colors.surface,
+                borderTopLeftRadius: radius.xl,
+                borderTopRightRadius: radius.xl,
+                borderWidth: 1,
+                borderBottomWidth: 0,
+                borderColor: colors.lineStrong,
+                paddingHorizontal: 20,
+                paddingTop: 10,
+                gap: 14,
+                maxHeight: "100%",
+                maxWidth: 760,
+                width: "100%",
+                alignSelf: "center",
+              },
+              panel,
+            ]}
           >
-            <View style={[styles.row, { justifyContent: "space-between" }]}>
-              <AppText variant="heading" style={{ flex: 1 }}>
-                {title}
-              </AppText>
+            <View
+              style={{
+                alignSelf: "center",
+                width: 40,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: colors.lineStrong,
+              }}
+            />
+            <View
+              style={[
+                styles.row,
+                { justifyContent: "space-between", flexWrap: "nowrap" },
+              ]}
+            >
+              <View style={{ flex: 1 }}>
+                {eyebrow && (
+                  <AppText variant="micro" tone="green">
+                    {eyebrow}
+                  </AppText>
+                )}
+                <AppText variant="heading" accessibilityRole="header">
+                  {title}
+                </AppText>
+              </View>
               <IconButton
                 label="Fechar"
-                icon="close-outline"
+                icon="close"
+                color={colors.muted}
                 onPress={onClose}
               />
             </View>
             <ScrollView
               keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{ gap: 16, paddingBottom: 36 }}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{
+                gap: 16,
+                paddingBottom: insets.bottom + 28,
+              }}
             >
               {error && (
                 <View accessibilityLiveRegion="assertive" style={{ gap: 8 }}>
@@ -76,9 +144,9 @@ export function Sheet({
               )}
               {children}
             </ScrollView>
-          </View>
+          </Animated.View>
         </KeyboardAvoidingView>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 }
