@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   AppCard,
   AppText,
@@ -11,11 +11,15 @@ import {
 } from "../src/components/ui";
 import { View } from "react-native";
 import { colors as c } from "../src/theme/tokens";
-import { Character } from "../src/components/ReactionModal";
+import { Character } from "../src/components/Character";
+import { VideoClub } from "../src/components/VideoClub";
+import { RetroTV } from "../src/components/RetroTV";
+import { randomBrute } from "../src/domain/quotes";
 import { useApp } from "../src/features/AppProvider";
 import { badgeDefinitions, totalXP } from "../src/domain/planner";
 export default function Motivation() {
   const { state, celebrate } = useApp();
+  const [brute, setBrute] = useState(() => randomBrute());
   return (
     <Screen>
       <ScreenHeader
@@ -53,6 +57,21 @@ export default function Motivation() {
           não o duplica.
         </AppText>
       </AppCard>
+      <SectionHeader
+        eyebrow="VIDEOLOCADORA 70s · 80s"
+        title="Frases de filmes, séries e livros"
+      />
+      <VideoClub />
+      <SectionHeader
+        eyebrow="SALA DOS BRUCUTUS"
+        title="Dose de ação dos anos 80"
+      />
+      <RetroTV
+        query={brute}
+        channel="86"
+        height={220}
+        onShuffle={() => setBrute(randomBrute())}
+      />
       <SectionHeader eyebrow="BADGES" title="Sua coleção" />
       {badgeDefinitions.map((b, index) => {
         const unlock = state.badges.find((u) => u.badgeId === b.id);
