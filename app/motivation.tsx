@@ -14,7 +14,7 @@ import { colors as c } from "../src/theme/tokens";
 import { Character } from "../src/components/Character";
 import { VideoClub } from "../src/components/VideoClub";
 import { RetroTV } from "../src/components/RetroTV";
-import { randomBrute } from "../src/domain/quotes";
+import { randomBrute, retroQuotes } from "../src/domain/quotes";
 import { useApp } from "../src/features/AppProvider";
 import { badgeDefinitions, totalXP } from "../src/domain/planner";
 export default function Motivation() {
@@ -59,7 +59,7 @@ export default function Motivation() {
       </AppCard>
       <SectionHeader
         eyebrow="VIDEOLOCADORA 70s · 80s"
-        title="Frases de filmes, séries e livros"
+        title={`${retroQuotes.length} fitas de filmes, séries e livros`}
       />
       <VideoClub />
       <SectionHeader
