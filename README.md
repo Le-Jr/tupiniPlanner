@@ -53,7 +53,7 @@ As conquistas (`CONGRATULATIONS`) e o Motivation Center exibem GIFs de heróis d
 
 1. Crie uma chave gratuita em <https://developers.giphy.com/dashboard/>.
 2. `cp .env.example .env` e preencha `EXPO_PUBLIC_GIPHY_API_KEY`.
-3. Reinicie o `expo start` (variáveis `EXPO_PUBLIC_*` são embutidas no build).
+3. Reinicie com cache limpo: `npx expo start --clear` (ou `npx expo export --platform web --clear`). Variáveis `EXPO_PUBLIC_*` são embutidas no bundle, e sem `--clear` o Metro pode reaproveitar o build antigo sem a chave.
 
 - Só o termo de busca é enviado ao GIPHY; nenhum dado pessoal ou de saúde.
 - Selo `POWERED BY GIPHY` exibido junto a cada GIF, como exigem os termos da API.
