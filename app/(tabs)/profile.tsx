@@ -6,6 +6,7 @@ import {
   AppText,
   Brand,
   Button,
+  Chip,
   Field,
   Pill,
   Screen,
@@ -23,6 +24,19 @@ import { exportBackup, parseBackup } from "../../src/domain/backup";
 import { numberInput } from "../../src/utils/input";
 import { pickBackup, shareBackup } from "../../src/utils/backupFiles";
 import { giphyConfigured } from "../../src/services/giphy";
+import {
+  eveningChoices,
+  leadChoices,
+  morningChoices,
+  reminderPrefs,
+  sampleReminder,
+  type ReminderPrefs,
+} from "../../src/domain/reminders";
+import {
+  ensurePermission,
+  notificationsSupported,
+  sendSample,
+} from "../../src/services/notifications";
 export default function Profile() {
   const { state, mutate, run, busy, systemReduce, closeReward, notify } =
     useApp();
@@ -117,6 +131,28 @@ export default function Profile() {
         s.settings[0]![key] = value;
       }),
     );
+  const reminders = reminderPrefs(settings);
+  const setReminder = (patch: Partial<ReminderPrefs>) =>
+    run(() =>
+      mutate((s) => {
+        const st = s.settings[0]!;
+        st.reminders = { ...reminderPrefs(st), ...patch };
+      }),
+    );
+  const toggleNotifications = (on: boolean) =>
+    run(async () => {
+      if (on && !(await ensurePermission())) {
+        notify(
+          "Permita as notificações do app nas configurações do Android.",
+          "info",
+        );
+        return;
+      }
+      await mutate((s) => {
+        s.settings[0]!.notificationsEnabled = on;
+      });
+      notify(on ? "Lembretes ligados" : "Lembretes desligados", "info");
+    });
   return (
     <Screen>
       <ScreenHeader
@@ -288,9 +324,98 @@ export default function Profile() {
           value={settings.hideStreak}
           onChange={(v) => setting("hideStreak", v)}
         />
-        <AppText variant="micro" tone="subtle">
-          SONS E NOTIFICAÇÕES: NÃO IMPLEMENTADOS NESTA VERSÃO.
-        </AppText>
+      </AppCard>
+      <SectionHeader eyebrow="NOTIFICAÇÕES" title="Lembretes no seu ritmo" />
+      <AppCard>
+        <Toggle
+          label="Lembretes no celular"
+          icon="notifications"
+          value={settings.notificationsEnabled && notificationsSupported}
+          onChange={toggleNotifications}
+          detail={
+            notificationsSupported
+              ? "Gerados e agendados no próprio aparelho, com o seu nome. Nada sai do celular."
+              : "Disponível no app Android."
+          }
+        />
+        {settings.notificationsEnabled && notificationsSupported && (
+          <>
+            <Toggle
+              label="Na hora de cada missão"
+              icon="alarm"
+              value={reminders.missions}
+              onChange={(v) => setReminder({ missions: v })}
+              detail="Só para missões com horário definido."
+            />
+            {reminders.missions && (
+              <View style={[styles.row, { gap: 8 }]}>
+                {leadChoices.map((m) => (
+                  <Chip
+                    key={m}
+                    label={m ? `${m} min antes` : "Na hora"}
+                    selected={reminders.lead === m}
+                    onPress={() => setReminder({ lead: m })}
+                  />
+                ))}
+              </View>
+            )}
+            <Toggle
+              label="Bom dia com a fita do dia"
+              icon="sunny"
+              value={reminders.morning}
+              onChange={(v) => setReminder({ morning: v })}
+              detail="Quantas missões tem hoje e uma frase dos anos 70/80."
+            />
+            {reminders.morning && (
+              <View style={[styles.row, { gap: 8 }]}>
+                {morningChoices.map((t) => (
+                  <Chip
+                    key={t}
+                    label={t}
+                    selected={reminders.morningTime === t}
+                    onPress={() => setReminder({ morningTime: t })}
+                  />
+                ))}
+              </View>
+            )}
+            <Toggle
+              label="Placar da noite"
+              icon="moon"
+              value={reminders.evening}
+              onChange={(v) => setReminder({ evening: v })}
+              detail="Só aparece se ainda houver missões abertas no dia."
+            />
+            {reminders.evening && (
+              <View style={[styles.row, { gap: 8 }]}>
+                {eveningChoices.map((t) => (
+                  <Chip
+                    key={t}
+                    label={t}
+                    selected={reminders.eveningTime === t}
+                    onPress={() => setReminder({ eveningTime: t })}
+                  />
+                ))}
+              </View>
+            )}
+            <Button
+              title="Testar notificação"
+              secondary
+              onPress={() =>
+                run(async () => {
+                  const ok = await sendSample(
+                    sampleReminder(state, new Date()),
+                  );
+                  notify(
+                    ok
+                      ? "Chega em 5 segundos. Bloqueie a tela para ver."
+                      : "Permita as notificações do app nas configurações do Android.",
+                    "info",
+                  );
+                })
+              }
+            />
+          </>
+        )}
       </AppCard>
       <SectionHeader
         eyebrow="PRIVACIDADE"

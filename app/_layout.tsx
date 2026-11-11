@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { View } from "react-native";
-import { Stack } from "expo-router";
+import { router, Stack, type Href } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -13,6 +13,7 @@ import { AppProvider, useApp } from "../src/features/AppProvider";
 import { AppText, Button, Loading } from "../src/components/ui";
 import { ReactionModal } from "../src/components/ReactionModal";
 import { Toast } from "../src/components/Toast";
+import { listenForTaps } from "../src/services/notifications";
 import { Onboarding } from "../src/features/Onboarding";
 import { colors, fonts } from "../src/theme/tokens";
 export { ErrorBoundary } from "expo-router";
@@ -23,6 +24,11 @@ function Shell() {
   useEffect(() => {
     if (ready || error) void SplashScreen.hideAsync().catch(() => {});
   }, [ready, error]);
+  const onboarded = !!state.profiles[0]?.onboardingCompleted;
+  useEffect(() => {
+    if (!ready || !onboarded) return;
+    return listenForTaps((url) => router.navigate(url as Href));
+  }, [ready, onboarded]);
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style="light" />

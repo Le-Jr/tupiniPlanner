@@ -145,6 +145,15 @@ export interface AppSettings {
   skipReactions: boolean;
   /** Online 80s GIFs via GIPHY; undefined (older data) means enabled. */
   gifsEnabled?: boolean;
+  /** Local reminder preferences; undefined (older data) uses the defaults. */
+  reminders?: {
+    missions: boolean;
+    lead: number;
+    morning: boolean;
+    morningTime: string;
+    evening: boolean;
+    eveningTime: string;
+  };
   locale: "pt-BR";
   guitarMinutes: number;
   guitarWeeklyGoal: number;

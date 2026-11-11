@@ -13,6 +13,8 @@ import { initialize, persist } from "../db/repository";
 import { emptyState, type State } from "../domain/model";
 import { localDate, materialize, shiftDate } from "../domain/planner";
 import { message } from "../utils/input";
+import { planReminders } from "../domain/reminders";
+import { syncReminders } from "../services/notifications";
 export const uuid = () => randomUUID();
 export type Mutation = (draft: State) => void;
 interface Context {
@@ -142,6 +144,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       subscription.remove();
     };
   }, [ready, today, mutate, run]);
+  // Re-plan local reminders whenever missions, settings or the day change.
+  useEffect(() => {
+    if (!ready) return;
+    const handle = setTimeout(() => {
+      void syncReminders(planReminders(state, new Date())).catch(() => {});
+    }, 800);
+    return () => clearTimeout(handle);
+  }, [ready, state, today]);
   const celebrate = useCallback((badge: string) => {
     const settings = current.current.settings[0]!;
     if (settings.animationsEnabled) setReward(badge);

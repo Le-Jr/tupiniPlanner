@@ -41,9 +41,13 @@ A web é um preview: o banco é local ao navegador e à origem, mas não há ser
 
 ```bash
 npx eas-cli login
-npx eas-cli build:configure
+npx eas-cli init
+# O .env não sobe para o build remoto: cadastre a chave do GIPHY no EAS.
+npx eas-cli env:create --environment preview --name EXPO_PUBLIC_GIPHY_API_KEY --value <chave> --visibility sensitive
 npx eas-cli build -p android --profile preview
 ```
+
+Ícone (adaptativo e monocromático), splash e ícone de notificação ficam em `assets/images/`, gerados por `node tools/make-brand-assets.mjs`.
 
 O build EAS é remoto e requer conexão/conta. **Nenhum APK foi gerado nesta entrega.** `npm run export:android` valida e gera o bundle JS/Hermes, não um APK. O identificador configurado é `com.tupinicode.tupiniplanner`; ajuste antes de distribuir. Backup automático do Android está desativado para manter a exportação de dados explícita.
 
@@ -60,6 +64,18 @@ As conquistas (`CONGRATULATIONS`) e o Motivation Center exibem GIFs de heróis d
 - Sem chave, sem rede ou com o toggle **Perfil → GIFs anos 80** desligado, aparecem os personagens vetoriais originais.
 - Com **Reduzir movimento**, os GIFs aparecem como imagem estática.
 - Frases ficam em `src/domain/quotes.ts`. Regra: só citações verificadas, nunca frase inventada atribuída a uma obra.
+
+## Lembretes (notificações locais)
+
+**Perfil → Lembretes no celular** pede a permissão do Android e agenda, no próprio aparelho, os próximos 3 dias de lembretes. Não há servidor de push: nada sai do celular.
+
+- **Missões:** na hora (ou 5–30 min antes) de cada missão com horário, com o seu primeiro nome e uma fala no estilo brucutu por categoria.
+- **Bom dia** (06h–09h): quantas missões tem no dia e a frase da fita do dia, com autor.
+- **Placar da noite** (20h–22h): só se ainda houver missões abertas; lembra o bônus de +20 XP quando ele ainda é possível.
+- Tocar na notificação abre Missões ou Início. **Testar notificação** dispara um exemplo em 5 s.
+- A agenda é refeita a cada mudança (concluir, pular, editar plano, mudar horários) e quando o dia vira. Se o app ficar mais de 3 dias sem abrir, os lembretes param até a próxima abertura.
+- O Android pode atrasar alguns minutos lembretes agendados em modo de economia de bateria.
+- Lógica pura e testada em `src/domain/reminders.ts`; agendamento em `src/services/notifications.ts`.
 
 ## O que está implementado
 
@@ -116,12 +132,13 @@ Executados nesta entrega: TypeScript strict, ESLint, 15 testes de domínio/persi
 5. Pausar/retomar timer, bloquear tela e reabrir; ativar redução de movimento do sistema.
 6. Exportar JSON, tentar arquivo inválido, cancelar importação e depois restaurar um backup válido.
 7. Testar 320–430 px, fonte ampliada, teclado, TalkBack e modo avião no APK.
-8. Apagar dados com confirmação e verificar retorno ao onboarding.
+8. Ligar lembretes, usar **Testar notificação**, criar uma missão para daqui a 2 min e conferir o aviso com a tela bloqueada; tocar e cair em Missões.
+9. Apagar dados com confirmação e verificar retorno ao onboarding.
 
 ## Pendências específicas
 
-- Sons opcionais: ainda não há reprodução de áudio; o Perfil informa a indisponibilidade, sem um controle fictício.
-- MVP-2: notificações locais, backup opcional em nuvem, calendário mensal avançado, gravação de áudio, logo oficial quando fornecida e distribuição/assinatura de release Android.
+- Sons opcionais: ainda não há reprodução de áudio, e o Perfil não exibe um controle fictício.
+- MVP-2: backup opcional em nuvem, calendário mensal avançado, gravação de áudio, logo oficial quando fornecida e distribuição/assinatura de release Android.
 - Antes de release: cumprir o roteiro visual/acessível acima em aparelhos reais e medir latência de check-in; o alvo de 150 ms ainda não foi aferido.
 - Históricos de atividades/refeições/guitarra mostram os 30 registros mais recentes; todos permanecem no banco e no backup. Paginação para históricos extensos é uma melhoria futura.
 

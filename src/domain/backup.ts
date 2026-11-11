@@ -233,6 +233,16 @@ export function parseBackup(text: string): State {
           ])
             bool(o, key);
           if (o.gifsEnabled !== undefined) bool(o, "gifsEnabled");
+          if (o.reminders !== undefined) {
+            const r = object(o.reminders);
+            for (const key of ["missions", "morning", "evening"]) bool(r, key);
+            num(r, "lead", 0, 120);
+            for (const key of ["morningTime", "eveningTime"]) {
+              str(r, key);
+              if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(r[key] as string))
+                throw new Error(`Horário inválido: ${key}.`);
+            }
+          }
           num(o, "guitarMinutes", 1, 180);
           num(o, "guitarWeeklyGoal", 1, 7);
           if (
