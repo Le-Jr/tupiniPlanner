@@ -151,6 +151,9 @@ Tudo persistido em SQLite local, migrações versionadas e operações transacio
 - **Escopo:** começar com experiência robusta de um único usuário offline, não plataforma social.
 - **Marca:** substituir placeholder pela logo oficial somente quando arquivo real estiver disponível; preservar cores originais.
 
+### Decisão 11/11/2026 — GIFs e citações dos anos 70/80
+Por decisão do dono do produto, as reações de conquista e o Motivation Center passam a usar GIFs de heróis de ação dos anos 80 via **API oficial do GIPHY** (canal licenciado, com atribuição `Powered by GIPHY`), e citações **reais, curtas e corretamente atribuídas** de filmes, séries e livros dos anos 70/80 (Videolocadora). Isso substitui, para esses dois pontos, as restrições de §5-H, §10 e §14 sobre GIFs de terceiros e frases apenas originais. Permanecem: nenhum GIF empacotado no app; nenhuma frase inventada atribuída a obra; fallback offline com personagens originais; `reduce motion` exibe GIF estático; recurso desligável em Perfil; nenhum dado pessoal enviado ao provedor.
+
 ## 15. Backlog sugerido
 P0: tokens da marca; shell; onboarding; agenda recorrente; conclusão/pulo/notas; SQLite; dashboard.  
 P1: treino e caminhada; refeições; timer de guitarra; progresso e peso; XP e badges; reações originais; exportação.  

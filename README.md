@@ -47,6 +47,20 @@ npx eas-cli build -p android --profile preview
 
 O build EAS é remoto e requer conexão/conta. **Nenhum APK foi gerado nesta entrega.** `npm run export:android` valida e gera o bundle JS/Hermes, não um APK. O identificador configurado é `com.tupinicode.tupiniplanner`; ajuste antes de distribuir. Backup automático do Android está desativado para manter a exportação de dados explícita.
 
+## GIFs anos 80 e Videolocadora
+
+As conquistas (`CONGRATULATIONS`) e o Motivation Center exibem GIFs de heróis de ação dos anos 80 pela **API oficial do GIPHY**, junto com frases reais e curtas de filmes, séries e livros dos anos 70/80, sempre com autor, obra e ano.
+
+1. Crie uma chave gratuita em <https://developers.giphy.com/dashboard/>.
+2. `cp .env.example .env` e preencha `EXPO_PUBLIC_GIPHY_API_KEY`.
+3. Reinicie o `expo start` (variáveis `EXPO_PUBLIC_*` são embutidas no build).
+
+- Só o termo de busca é enviado ao GIPHY; nenhum dado pessoal ou de saúde.
+- Selo `POWERED BY GIPHY` exibido junto a cada GIF, como exigem os termos da API.
+- Sem chave, sem rede ou com o toggle **Perfil → GIFs anos 80** desligado, aparecem os personagens vetoriais originais.
+- Com **Reduzir movimento**, os GIFs aparecem como imagem estática.
+- Frases ficam em `src/domain/quotes.ts`. Regra: só citações verificadas, nunca frase inventada atribuída a uma obra.
+
 ## O que está implementado
 
 - Onboarding com consentimento local, campos pessoais opcionais, baseline e seed somente por adesão explícita.
