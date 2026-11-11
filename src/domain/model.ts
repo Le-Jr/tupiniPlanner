@@ -143,6 +143,8 @@ export interface AppSettings {
   hideBody: boolean;
   hideStreak: boolean;
   skipReactions: boolean;
+  /** Online 80s GIFs via GIPHY; undefined (older data) means enabled. */
+  gifsEnabled?: boolean;
   locale: "pt-BR";
   guitarMinutes: number;
   guitarWeeklyGoal: number;

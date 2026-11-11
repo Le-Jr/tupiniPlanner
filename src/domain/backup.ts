@@ -232,6 +232,7 @@ export function parseBackup(text: string): State {
             "skipReactions",
           ])
             bool(o, key);
+          if (o.gifsEnabled !== undefined) bool(o, "gifsEnabled");
           num(o, "guitarMinutes", 1, 180);
           num(o, "guitarWeeklyGoal", 1, 7);
           if (

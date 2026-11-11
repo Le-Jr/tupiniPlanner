@@ -22,6 +22,7 @@ import { emptyState, type State } from "../../src/domain/model";
 import { exportBackup, parseBackup } from "../../src/domain/backup";
 import { numberInput } from "../../src/utils/input";
 import { pickBackup, shareBackup } from "../../src/utils/backupFiles";
+import { giphyConfigured } from "../../src/services/giphy";
 export default function Profile() {
   const { state, mutate, run, busy, systemReduce, closeReward, notify } =
     useApp();
@@ -234,6 +235,23 @@ export default function Profile() {
           icon="sparkles"
           value={settings.animationsEnabled}
           onChange={(v) => setting("animationsEnabled", v)}
+        />
+        <Toggle
+          label="GIFs anos 80 (online)"
+          icon="film"
+          value={settings.gifsEnabled !== false}
+          onChange={(v) =>
+            run(() =>
+              mutate((s) => {
+                s.settings[0]!.gifsEnabled = v;
+              }),
+            )
+          }
+          detail={
+            giphyConfigured
+              ? "Busca GIFs no GIPHY nas conquistas e no Motivation Center. Só o termo de busca é enviado."
+              : "Defina EXPO_PUBLIC_GIPHY_API_KEY no .env para ativar. Sem chave, usamos os personagens originais."
+          }
         />
         <Toggle
           label="Reduzir movimento"

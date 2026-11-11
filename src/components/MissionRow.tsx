@@ -22,7 +22,7 @@ import {
   Pill,
   styles,
 } from "./ui";
-import { Character } from "./ReactionModal";
+import { Character } from "./Character";
 import { Sheet } from "./Sheet";
 import { categoryColors, categoryIcons, colors as c } from "../theme/tokens";
 
