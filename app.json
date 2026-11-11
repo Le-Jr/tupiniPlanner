@@ -48,6 +48,13 @@
       "typedRoutes": true
     },
     "icon": "./assets/images/icon.png",
-    "backgroundColor": "#071A14"
+    "backgroundColor": "#071A14",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ba2ea83e-6d86-4599-859e-4598cf823d91"
+      }
+    },
+    "owner": "le-jr"
   }
 }
