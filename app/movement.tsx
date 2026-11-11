@@ -5,11 +5,18 @@ import {
   AppText,
   Button,
   Chip,
+  EmptyState,
   Field,
+  Icon,
+  IconTile,
+  Pill,
+  ProgressBar,
   Screen,
+  ScreenHeader,
   SectionHeader,
   styles,
 } from "../src/components/ui";
+import { colors as c } from "../src/theme/tokens";
 import { useApp, uuid } from "../src/features/AppProvider";
 import { dayTasks, setStatus, validDate } from "../src/domain/planner";
 import { numberInput } from "../src/utils/input";
@@ -41,14 +48,13 @@ const exercises = [
   },
 ];
 export default function Movement() {
-  const { state, today, run, mutate, busy, celebrate } = useApp();
+  const { state, today, run, mutate, busy, celebrate, notify } = useApp();
   const [type, setType] = useState<"walk" | "calisthenics">("walk");
   const [minutes, setMinutes] = useState("");
   const [effort, setEffort] = useState("");
   const [notes, setNotes] = useState("");
   const [date, setDate] = useState(today);
   const [selected, setSelected] = useState("");
-  const [saved, setSaved] = useState(false);
   const [entries, setEntries] = useState(
     exercises.map((e) => ({
       name: e.name,
@@ -96,44 +102,75 @@ export default function Movement() {
       setMinutes("");
       setNotes("");
       setSelected("");
-      setSaved(true);
+      notify("Atividade registrada. Um passo de cada vez.");
       if (awards[0]) celebrate(awards[0]);
     });
   return (
     <Screen>
-      <AppText variant="micro" tone="green">
-        MOVIMENTO // NO SEU RITMO
-      </AppText>
-      <AppText variant="title">Um passo possível.</AppText>
-      <AppText tone="muted">
-        Sugestão para começar: duas sessões leves de calistenia e três
-        caminhadas de 15–20 min por semana. Adapte ou pause em Missões. Nenhuma
-        progressão é automática.
-      </AppText>
-      <AppCard>
-        <AppText variant="heading">Antes de começar</AppText>
-        <AppText>
+      <ScreenHeader
+        eyebrow="MOVIMENTO · NO SEU RITMO"
+        title="Um passo possível."
+        subtitle="Sugestão: duas sessões leves de calistenia e três caminhadas de 15–20 min por semana. Adapte ou pause em Missões. Nenhuma progressão é automática."
+      />
+      <AppCard
+        style={{ borderColor: `${c.accent}55`, backgroundColor: "#1C1A0E" }}
+      >
+        <View style={[styles.row, { flexWrap: "nowrap" }]}>
+          <IconTile icon="shield-checkmark" color={c.accent} size={38} />
+          <AppText variant="label" style={{ flex: 1 }}>
+            Antes de começar
+          </AppText>
+        </View>
+        <AppText variant="small" tone="muted">
           Use apoio firme e uma intensidade confortável. Interrompa diante de
           dor no peito, desmaio, tontura intensa ou falta de ar incomum e busque
           avaliação adequada. Adapte o plano às suas limitações.
         </AppText>
       </AppCard>
-      <SectionHeader title="Seu repertório de movimento" />
-      {exercises.map((e) => (
-        <AppCard key={e.name}>
-          <AppText variant="heading">{e.name}</AppText>
-          <AppText>{e.how}</AppText>
-          <AppText tone="muted">Mais fácil: {e.easier}</AppText>
-          <AppText tone="muted">Quando confortável: {e.next}</AppText>
-          <AppText variant="micro" tone="green">
-            SUGESTÃO: 1–2 SÉRIES ADAPTÁVEIS
-          </AppText>
+      <SectionHeader eyebrow="REPERTÓRIO" title="Seus movimentos" />
+      {exercises.map((e, i) => (
+        <AppCard key={e.name} accent={c.primary} style={{ paddingLeft: 16 }}>
+          <View style={[styles.row, { flexWrap: "nowrap" }]}>
+            <AppText variant="micro" tone="green">
+              {String(i + 1).padStart(2, "0")}
+            </AppText>
+            <AppText variant="label" style={{ flex: 1, fontSize: 16 }}>
+              {e.name}
+            </AppText>
+            <Pill label="1–2 SÉRIES" color={c.primary} />
+          </View>
+          <AppText variant="small">{e.how}</AppText>
+          <View style={{ gap: 6 }}>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <Icon
+                name="arrow-down-circle-outline"
+                color={c.muted}
+                size={16}
+              />
+              <AppText variant="small" tone="muted" style={{ flex: 1 }}>
+                <AppText variant="small" tone="normal">
+                  Mais fácil:{" "}
+                </AppText>
+                {e.easier}
+              </AppText>
+            </View>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <Icon name="arrow-up-circle-outline" color={c.muted} size={16} />
+              <AppText variant="small" tone="muted" style={{ flex: 1 }}>
+                <AppText variant="small" tone="normal">
+                  Quando confortável:{" "}
+                </AppText>
+                {e.next}
+              </AppText>
+            </View>
+          </View>
         </AppCard>
       ))}
-      <SectionHeader title="Registrar atividade" />
+      <SectionHeader eyebrow="REGISTRO" title="Registrar atividade" />
       <AppCard>
         <View style={styles.row}>
           <Chip
+            icon="walk"
             label="Caminhada"
             selected={type === "walk"}
             onPress={() => {
@@ -142,6 +179,7 @@ export default function Movement() {
             }}
           />
           <Chip
+            icon="barbell"
             label="Calistenia"
             selected={type === "calisthenics"}
             onPress={() => {
@@ -222,37 +260,65 @@ export default function Movement() {
             onSelect={setSelected}
           />
         )}
-        <Button title="Salvar atividade" onPress={save} disabled={busy} />
-        {saved && (
-          <AppText tone="green" accessibilityLiveRegion="polite">
-            Atividade registrada.
-          </AppText>
-        )}
+        <Button
+          title="Salvar atividade"
+          icon="checkmark"
+          onPress={save}
+          disabled={busy}
+        />
       </AppCard>
-      <SectionHeader title="Seu histórico" />
+      <SectionHeader eyebrow="HISTÓRICO" title="Seu histórico" />
       {!state.workouts.length && (
-        <AppText tone="muted">Suas atividades aparecerão aqui.</AppText>
+        <EmptyState
+          icon="walk-outline"
+          title="Seu primeiro passo te espera."
+          detail="Suas atividades aparecerão aqui."
+        />
       )}
       {state.workouts
         .slice()
         .sort((a, b) => b.localDate.localeCompare(a.localDate))
         .slice(0, 30)
         .map((w) => (
-          <AppCard key={w.id}>
-            <AppText>
-              {w.workoutType === "walk" ? "Caminhada" : "Calistenia"} ·{" "}
-              {w.minutes} min
-            </AppText>
-            <AppText variant="micro" tone="muted">
-              {w.localDate}
-              {w.effort !== undefined ? ` · esforço ${w.effort}/10` : ""}
-            </AppText>
+          <AppCard key={w.id} style={{ gap: 8 }}>
+            <View style={[styles.row, { flexWrap: "nowrap" }]}>
+              <IconTile
+                icon={w.workoutType === "walk" ? "walk" : "barbell"}
+                size={38}
+              />
+              <View style={{ flex: 1 }}>
+                <AppText variant="label">
+                  {w.workoutType === "walk" ? "Caminhada" : "Calistenia"}
+                </AppText>
+                <AppText variant="small" tone="subtle">
+                  {w.localDate.split("-").reverse().join("/")}
+                </AppText>
+              </View>
+              <Pill
+                icon="time-outline"
+                label={`${w.minutes} MIN`}
+                color={c.primary}
+              />
+            </View>
+            {w.effort !== undefined && (
+              <View style={{ gap: 4 }}>
+                <AppText variant="micro" tone="subtle">
+                  ESFORÇO {w.effort}/10
+                </AppText>
+                <ProgressBar
+                  value={w.effort}
+                  total={10}
+                  segments={10}
+                  color={c.accent}
+                />
+              </View>
+            )}
             {w.exercises.map((e) => (
-              <AppText key={e.name} tone="muted">
+              <AppText key={e.name} variant="small" tone="muted">
                 {e.name}: {e.sets} × {e.reps}
               </AppText>
             ))}
-            {!!w.notes && <AppText>{w.notes}</AppText>}
+            {!!w.notes && <AppText variant="small">{w.notes}</AppText>}
           </AppCard>
         ))}
     </Screen>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { View } from "react-native";
 import { router } from "expo-router";
 import {
   AppCard,
@@ -6,10 +7,15 @@ import {
   Brand,
   Button,
   Field,
+  Pill,
   Screen,
+  ScreenHeader,
   SectionHeader,
   Toggle,
+  styles,
 } from "../../src/components/ui";
+import { badgeDefinitions, totalXP } from "../../src/domain/planner";
+import { colors as c } from "../../src/theme/tokens";
 import { Sheet } from "../../src/components/Sheet";
 import { useApp, uuid } from "../../src/features/AppProvider";
 import { emptyState, type State } from "../../src/domain/model";
@@ -17,7 +23,8 @@ import { exportBackup, parseBackup } from "../../src/domain/backup";
 import { numberInput } from "../../src/utils/input";
 import { pickBackup, shareBackup } from "../../src/utils/backupFiles";
 export default function Profile() {
-  const { state, mutate, run, busy, systemReduce, closeReward } = useApp();
+  const { state, mutate, run, busy, systemReduce, closeReward, notify } =
+    useApp();
   const profile = state.profiles[0]!;
   const settings = state.settings[0]!;
   const [name, setName] = useState(profile.displayName);
@@ -34,7 +41,6 @@ export default function Profile() {
   const [backup, setBackup] = useState<State | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [confirm, setConfirm] = useState("");
-  const [feedback, setFeedback] = useState("");
   const save = () =>
     run(async () => {
       const heightCm = numberInput(height, 80, 250, "Altura", true);
@@ -68,7 +74,7 @@ export default function Profile() {
             createdAt: new Date().toISOString(),
           });
       });
-      setFeedback("Perfil atualizado.");
+      notify("Perfil atualizado");
     });
   const load = () =>
     run(async () => {
@@ -81,7 +87,7 @@ export default function Profile() {
       await mutate((s) => Object.assign(s, backup));
       closeReward();
       setBackup(null);
-      setFeedback("Backup importado.");
+      notify("Backup importado");
       const p = backup.profiles[0]!;
       setName(p.displayName);
       setHeight(p.heightCm?.toString() ?? "");
@@ -112,11 +118,47 @@ export default function Profile() {
     );
   return (
     <Screen>
-      <Brand />
-      <AppText variant="title">Seu plano. Suas regras.</AppText>
-      <AppText tone="muted">
-        Tudo fica neste aparelho. Nenhum login necessário.
-      </AppText>
+      <ScreenHeader
+        eyebrow="PERFIL"
+        title="Seu plano. Suas regras."
+        subtitle="Tudo fica neste aparelho. Nenhum login necessário."
+      />
+      <AppCard variant="hero" corners>
+        <View style={[styles.row, { flexWrap: "nowrap", gap: 14 }]}>
+          <View
+            style={{
+              width: 60,
+              height: 60,
+              borderRadius: 18,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: c.primary,
+            }}
+          >
+            <AppText variant="title" style={{ color: c.onPrimary }}>
+              {(profile.displayName.trim()[0] ?? ">").toUpperCase()}
+            </AppText>
+          </View>
+          <View style={{ flex: 1, gap: 4 }}>
+            <AppText variant="heading">
+              {profile.displayName.trim() || "Recruta anônimo"}
+            </AppText>
+            <View style={[styles.row, { gap: 6 }]}>
+              <Pill
+                icon="flash"
+                label={`${totalXP(state)} XP`}
+                color={c.accent}
+              />
+              <Pill
+                icon="ribbon"
+                label={`${state.badges.length}/${badgeDefinitions.length} CONQUISTAS`}
+                color={c.primary}
+              />
+            </View>
+          </View>
+        </View>
+      </AppCard>
+      <SectionHeader eyebrow="DADOS PESSOAIS" title="Sobre você" />
       <AppCard>
         <Field
           label="Nome (opcional)"
@@ -160,17 +202,24 @@ export default function Profile() {
           value={mealRoutine}
           onChangeText={setMealRoutine}
         />
-        <Button title="Salvar perfil" onPress={save} disabled={busy} />
+        <Button
+          title="Salvar perfil"
+          icon="checkmark"
+          onPress={save}
+          disabled={busy}
+        />
       </AppCard>
       <Button
         title="Ajustar frequências e dias de descanso"
         secondary
+        icon="calendar-outline"
         onPress={() => router.push("/missions")}
       />
-      <SectionHeader title="Deixe com a sua cara" />
+      <SectionHeader eyebrow="EXPERIÊNCIA" title="Deixe com a sua cara" />
       <AppCard>
         <Toggle
           label="Tema noturno profundo"
+          icon="moon"
           value={settings.theme === "midnight"}
           onChange={(v) =>
             run(() =>
@@ -182,11 +231,13 @@ export default function Profile() {
         />
         <Toggle
           label="Mostrar reações de conquistas"
+          icon="sparkles"
           value={settings.animationsEnabled}
           onChange={(v) => setting("animationsEnabled", v)}
         />
         <Toggle
           label="Reduzir movimento"
+          icon="pause-circle"
           value={settings.reducedMotion}
           onChange={(v) => setting("reducedMotion", v)}
           detail={
@@ -196,30 +247,37 @@ export default function Profile() {
           }
         />
         <Toggle
-          label="Vibração nas conquistas"
+          label="Vibração e toques"
+          icon="phone-portrait"
           value={settings.hapticsEnabled}
           onChange={(v) => setting("hapticsEnabled", v)}
         />
         <Toggle
           label="Humor leve ao pular uma missão"
+          icon="happy"
           value={settings.skipReactions}
           onChange={(v) => setting("skipReactions", v)}
         />
         <Toggle
           label="Ocultar métricas corporais"
+          icon="eye-off"
           value={settings.hideBody}
           onChange={(v) => setting("hideBody", v)}
         />
         <Toggle
           label="Ocultar sequência de dias"
+          icon="flame"
           value={settings.hideStreak}
           onChange={(v) => setting("hideStreak", v)}
         />
-        <AppText variant="micro" tone="muted">
+        <AppText variant="micro" tone="subtle">
           SONS E NOTIFICAÇÕES: NÃO IMPLEMENTADOS NESTA VERSÃO.
         </AppText>
       </AppCard>
-      <SectionHeader title="Seus dados, sob seu controle" />
+      <SectionHeader
+        eyebrow="PRIVACIDADE"
+        title="Seus dados, sob seu controle"
+      />
       <AppCard>
         <AppText tone="muted">
           O backup inclui seus registros pessoais em JSON legível. Escolha onde
@@ -249,21 +307,15 @@ export default function Profile() {
           }}
         />
       </AppCard>
-      {!!feedback && (
-        <AppText tone="green" accessibilityLiveRegion="polite">
-          {feedback}
+      <AppCard variant="outline" style={{ alignItems: "center" }}>
+        <Brand />
+        <AppText variant="micro" tone="subtle">
+          VERSÃO 1.0.0
         </AppText>
-      )}
-      <AppCard>
-        <AppText variant="heading">TupiniPlanner · v1.0.0</AppText>
-        <AppText>Train. Eat. Practice. Evolve.</AppText>
-        <AppText tone="muted">
+        <AppText variant="small" tone="subtle" style={{ textAlign: "center" }}>
           Marca provisória substituível. Reações vetoriais originais; sem
           imagens, falas ou vozes de filmes. Inter e JetBrains Mono: SIL OFL.
           Ionicons: MIT.
-        </AppText>
-        <AppText variant="micro" tone="green">
-          SIGNED BY LEANDRO JUNIOR
         </AppText>
       </AppCard>
       <Sheet

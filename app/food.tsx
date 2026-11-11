@@ -6,18 +6,22 @@ import {
   AppText,
   Button,
   Chip,
+  EmptyState,
   Field,
+  Pill,
   Screen,
+  ScreenHeader,
   SectionHeader,
   styles,
 } from "../src/components/ui";
+import { categoryColors, colors as c } from "../src/theme/tokens";
 import { useApp, uuid } from "../src/features/AppProvider";
 import { dayTasks, setStatus, validDate } from "../src/domain/planner";
 import { numberInput } from "../src/utils/input";
 import { LogMission } from "../src/features/LogMission";
 import { MissionRow } from "../src/components/MissionRow";
 export default function Food() {
-  const { state, today, run, mutate, busy, celebrate } = useApp();
+  const { state, today, run, mutate, busy, celebrate, notify } = useApp();
   const [meal, setMeal] = useState("");
   const [description, setDescription] = useState("");
   const [hunger, setHunger] = useState("");
@@ -28,7 +32,6 @@ export default function Food() {
     "completed" | "skipped" | "postponed"
   >("completed");
   const [selected, setSelected] = useState("");
-  const [saved, setSaved] = useState(false);
   const save = () =>
     run(async () => {
       if (!meal.trim()) throw new Error("Dê um nome ao registro.");
@@ -63,29 +66,28 @@ export default function Food() {
       setSelected("");
       setDescription("");
       setNotes("");
-      setSaved(true);
+      notify("Registro salvo. Sem julgamentos.");
       if (awards[0]) celebrate(awards[0]);
     });
   return (
     <Screen>
-      <AppText variant="micro" tone="green">
-        ALIMENTAÇÃO // SEM JULGAMENTO
-      </AppText>
-      <AppText variant="title">Organização primeiro.</AppText>
-      <AppText tone="muted">
-        Observe sua rotina e sua fome. Os horários são lembretes ajustáveis, não
-        uma obrigação de comer.
-      </AppText>
-      <SectionHeader title="Lembretes de hoje" />
+      <ScreenHeader
+        eyebrow="ALIMENTAÇÃO · SEM JULGAMENTO"
+        tone="accent"
+        title="Organização primeiro."
+        subtitle="Observe sua rotina e sua fome. Os horários são lembretes ajustáveis, não uma obrigação de comer."
+      />
+      <SectionHeader eyebrow="HOJE" title="Seus lembretes" />
       {dayTasks(state, today, "meal").map((t) => (
         <MissionRow key={t.id} task={t} />
       ))}
       <Button
         title="Ajustar refeições e horários"
         secondary
+        icon="options-outline"
         onPress={() => router.push("/missions")}
       />
-      <SectionHeader title="Como foi sua refeição?" />
+      <SectionHeader eyebrow="REGISTRO" title="Como foi sua refeição?" />
       <AppCard>
         <Field
           label="Nome da refeição"
@@ -102,13 +104,30 @@ export default function Food() {
         <View style={styles.row}>
           {(
             [
-              { id: "completed", label: "Feito" },
-              { id: "postponed", label: "Adiado" },
-              { id: "skipped", label: "Não fiz" },
+              {
+                id: "completed",
+                label: "Feito",
+                icon: "checkmark-circle",
+                color: c.primary,
+              },
+              {
+                id: "postponed",
+                label: "Adiado",
+                icon: "time",
+                color: "#9FB4FF",
+              },
+              {
+                id: "skipped",
+                label: "Não fiz",
+                icon: "cloud-outline",
+                color: c.accent,
+              },
             ] as const
           ).map((s) => (
             <Chip
               key={s.id}
+              icon={s.icon}
+              color={s.color}
               label={s.label}
               selected={status === s.id}
               onPress={() => {
@@ -150,37 +169,71 @@ export default function Food() {
             onSelect={setSelected}
           />
         )}
-        <Button title="Salvar registro" onPress={save} disabled={busy} />
-        {saved && (
-          <AppText tone="green" accessibilityLiveRegion="polite">
-            Registro salvo. Sem julgamentos.
-          </AppText>
-        )}
+        <Button
+          title="Salvar registro"
+          icon="checkmark"
+          onPress={save}
+          disabled={busy}
+        />
       </AppCard>
-      <SectionHeader title="Seu histórico alimentar" />
+      <SectionHeader eyebrow="HISTÓRICO" title="Seu histórico alimentar" />
       {!state.meals.length && (
-        <AppText tone="muted">Nenhuma refeição registrada ainda.</AppText>
+        <EmptyState
+          icon="restaurant-outline"
+          title="Nada por aqui ainda."
+          detail="Seu primeiro registro já ajuda a enxergar a rotina."
+        />
       )}
       {state.meals
         .slice()
         .reverse()
         .slice(0, 30)
         .map((m) => (
-          <AppCard key={m.id}>
-            <AppText>
-              {m.mealType} ·{" "}
-              {
-                { completed: "feito", skipped: "não fiz", postponed: "adiado" }[
-                  m.status
-                ]
-              }
-            </AppText>
-            <AppText variant="micro" tone="muted">
-              {m.localDate} {m.at}
-              {m.hunger !== undefined ? ` · fome ${m.hunger}/10` : ""}
-            </AppText>
-            {!!m.description && <AppText>{m.description}</AppText>}
-            {!!m.notes && <AppText tone="muted">{m.notes}</AppText>}
+          <AppCard
+            key={m.id}
+            accent={categoryColors.meal}
+            style={{ paddingLeft: 16, gap: 6 }}
+          >
+            <View style={[styles.row, { justifyContent: "space-between" }]}>
+              <AppText
+                variant="label"
+                style={{ flex: 1, textTransform: "capitalize" }}
+              >
+                {m.mealType}
+              </AppText>
+              <AppText variant="micro" tone="subtle">
+                {m.localDate.split("-").reverse().join("/")} {m.at}
+              </AppText>
+            </View>
+            <View style={[styles.row, { gap: 6 }]}>
+              <Pill
+                label={
+                  {
+                    completed: "FEITO",
+                    skipped: "NÃO FIZ",
+                    postponed: "ADIADO",
+                  }[m.status]
+                }
+                color={
+                  {
+                    completed: c.primary,
+                    skipped: c.accent,
+                    postponed: "#9FB4FF",
+                  }[m.status]
+                }
+              />
+              {m.hunger !== undefined && (
+                <Pill icon="pulse" label={`FOME ${m.hunger}/10`} />
+              )}
+            </View>
+            {!!m.description && (
+              <AppText variant="small">{m.description}</AppText>
+            )}
+            {!!m.notes && (
+              <AppText variant="small" tone="muted">
+                {m.notes}
+              </AppText>
+            )}
           </AppCard>
         ))}
     </Screen>

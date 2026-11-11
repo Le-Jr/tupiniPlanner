@@ -7,6 +7,7 @@ import Animated, {
   withRepeat,
   withTiming,
   cancelAnimation,
+  ZoomIn,
 } from "react-native-reanimated";
 import { badgeDefinitions } from "../domain/planner";
 import { useApp } from "../features/AppProvider";
@@ -139,17 +140,19 @@ export function ReactionModal() {
       <View
         style={{
           flex: 1,
-          backgroundColor: "#000B",
+          backgroundColor: c.overlay,
           justifyContent: "center",
           padding: 22,
         }}
       >
-        <View
+        <Animated.View
+          entering={animate ? ZoomIn.springify().damping(14) : undefined}
           accessibilityViewIsModal
           style={[
             styles.card,
             {
               borderColor: c.accent,
+              backgroundColor: c.surfaceRaised,
               maxWidth: 440,
               maxHeight: "95%",
               width: "100%",
@@ -163,20 +166,36 @@ export function ReactionModal() {
             showsVerticalScrollIndicator={false}
           >
             {animate && reward && <Confetti key={reward} />}
-            <AppText variant="micro" tone="accent">
+            <AppText
+              variant="micro"
+              tone="accent"
+              style={{ textAlign: "center" }}
+            >
               ✦ MISSION COMPLETE ✦
             </AppText>
             <PixelTitle />
             <Character index={index} animated={animate} variant={reaction} />
-            <AppText variant="title">{badge?.title}</AppText>
-            <AppText>{lines[reaction]}</AppText>
-            <AppText variant="micro" tone="muted">
+            <AppText variant="title" style={{ textAlign: "center" }}>
+              {badge?.title}
+            </AppText>
+            <AppText tone="muted" style={{ textAlign: "center" }}>
+              {lines[reaction]}
+            </AppText>
+            <AppText
+              variant="micro"
+              tone="subtle"
+              style={{ textAlign: "center" }}
+            >
               {names[index]}
               {" // REAÇÃO ORIGINAL"}
             </AppText>
-            <Button title="CONTINUAR" onPress={closeReward} />
+            <Button
+              title="CONTINUAR"
+              icon="arrow-forward"
+              onPress={closeReward}
+            />
           </ScrollView>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
