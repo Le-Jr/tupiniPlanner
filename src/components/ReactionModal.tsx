@@ -1,21 +1,27 @@
-import React, { useEffect } from "react";
-import { Modal, ScrollView, View } from "react-native";
-import Svg, { Circle, Path, Rect } from "react-native-svg";
+import React, { useEffect, useMemo, useState } from "react";
+import { Modal, Pressable, ScrollView, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
+  FadeIn,
+  ZoomIn,
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
+  withSequence,
   withTiming,
-  cancelAnimation,
-  ZoomIn,
 } from "react-native-reanimated";
 import { badgeDefinitions } from "../domain/planner";
+import { credit, randomBrute, randomQuote } from "../domain/quotes";
 import { useApp } from "../features/AppProvider";
-import { AppText, Button, styles } from "./ui";
-import { Confetti } from "./Confetti";
+import { AppText } from "./ui";
+import { characterNames } from "./Character";
 import { PixelTitle } from "./PixelTitle";
-import { colors as c } from "../theme/tokens";
-const names = ["O Campeão", "O Comando", "O Veterano", "O Rival"];
+import { RetroTV, Scanlines, neon } from "./RetroTV";
+import { Synthwave } from "./Synthwave";
+import { fonts, radius } from "../theme/tokens";
+export { Character } from "./Character";
 const lines = [
   "Mais um round vencido. O progresso ficou registrado.",
   "Três caminhadas, três capítulos da sua campanha.",
@@ -24,178 +30,346 @@ const lines = [
   "Você voltou. O próximo round começa com esse passo.",
   "28 dias de compromisso. Sua campanha continua.",
 ];
-// Original geometric archetypes. Replace only with licensed original artwork.
-export function Character({
-  index,
-  animated = false,
-  serious = false,
-  variant = 0,
+const months = [
+  "JAN",
+  "FEV",
+  "MAR",
+  "ABR",
+  "MAI",
+  "JUN",
+  "JUL",
+  "AGO",
+  "SET",
+  "OUT",
+  "NOV",
+  "DEZ",
+];
+const glow = (color: string) => ({
+  textShadowColor: color,
+  textShadowRadius: 12,
+  textShadowOffset: { width: 0, height: 0 },
+});
+
+function NeonButton({
+  title,
+  onPress,
+  ghost,
 }: {
-  index: number;
-  animated?: boolean;
-  serious?: boolean;
-  variant?: number;
+  title: string;
+  onPress: () => void;
+  ghost?: boolean;
 }) {
-  const lift = useSharedValue(0);
-  useEffect(() => {
-    if (animated)
-      lift.value = withRepeat(withTiming(-6, { duration: 1000 }), -1, true);
-    else {
-      cancelAnimation(lift);
-      lift.value = 0;
-    }
-    return () => cancelAnimation(lift);
-  }, [animated, lift]);
-  const motion = useAnimatedStyle(() => ({
-    transform: [{ translateY: lift.value }],
-  }));
-  const color = [c.primary, c.accent, "#B3D5EE", "#D6B4FF"][index % 4]!;
   return (
-    <Animated.View style={[{ alignSelf: "center" }, motion]}>
-      <Svg
-        width={150}
-        height={150}
-        viewBox="0 0 150 150"
-        accessibilityLabel={names[index]}
-      >
-        <Circle cx={75} cy={75} r={69} fill={c.background} stroke={c.line} />
-        <Path d="M28 134L38 104L62 92H88L112 104L122 134" fill={color} />
-        {variant > 0 && (
-          <Path
-            d={
-              variant % 2
-                ? "M18 110L35 88L46 100M104 100L118 81L132 93"
-                : "M22 105L38 122M111 122L130 105"
-            }
-            stroke={color}
-            strokeWidth={12}
-            fill="none"
-          />
-        )}
-        <Path d="M60 90L75 112L90 90" fill={c.forest} />
-        <Rect
-          x={49}
-          y={35}
-          width={52}
-          height={62}
-          rx={index === 2 ? 8 : 22}
-          fill="#CBAF83"
-        />
-        <Path
-          d={
-            index === 1
-              ? "M45 49L49 27H101L108 49Z"
-              : index === 3
-                ? "M45 45L55 18L67 30L83 14L102 47Z"
-                : "M48 44L50 26H100L104 44Z"
-          }
-          fill={color}
-        />
-        <Path d="M58 61H66M84 61H92" stroke={c.background} strokeWidth={5} />
-        <Path
-          d={
-            serious
-              ? "M64 81H87"
-              : index === 2
-                ? "M60 79H90L83 90H67Z"
-                : "M64 79Q75 88 87 77"
-          }
-          fill="none"
-          stroke={c.background}
-          strokeWidth={3}
-        />
-        {index === 1 && (
-          <Path d="M49 50H101" stroke={c.background} strokeWidth={7} />
-        )}
-        {index === 3 && (
-          <Path
-            d="M45 104L104 134M104 104L45 134"
-            stroke={c.background}
-            strokeWidth={5}
-          />
-        )}
-      </Svg>
-    </Animated.View>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.8 : 1,
+        flex: ghost ? undefined : 1,
+      })}
+    >
+      {ghost ? (
+        <View
+          style={{
+            minHeight: 48,
+            paddingHorizontal: 16,
+            borderRadius: radius.md,
+            borderWidth: 1,
+            borderColor: `${neon.cyan}88`,
+            backgroundColor: "#12062AE6",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <AppText
+            style={{ fontFamily: fonts.mono, fontSize: 12, color: neon.cyan }}
+          >
+            {title}
+          </AppText>
+        </View>
+      ) : (
+        <LinearGradient
+          colors={[neon.pink, neon.sun]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            minHeight: 54,
+            borderRadius: radius.md,
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: neon.pink,
+            shadowOpacity: 0.6,
+            shadowRadius: 18,
+            elevation: 8,
+          }}
+        >
+          <AppText
+            style={{
+              fontFamily: fonts.bold,
+              fontSize: 16,
+              letterSpacing: 3,
+              color: "#1A0326",
+            }}
+          >
+            {title}
+          </AppText>
+        </LinearGradient>
+      )}
+    </Pressable>
   );
 }
+
 export function ReactionModal() {
-  const { reward, closeReward, state, systemReduce } = useApp();
+  const { reward, closeReward, animate, haptic } = useApp();
+  const insets = useSafeAreaInsets();
   const badge = badgeDefinitions.find((b) => b.id === reward);
   const index = badge?.character ?? 0;
   const reaction = Math.max(
     0,
     badgeDefinitions.findIndex((b) => b.id === reward),
   );
-  const animate =
-    !!state.settings[0]?.animationsEnabled &&
-    !state.settings[0]?.reducedMotion &&
-    !systemReduce;
+  const [quote, setQuote] = useState(() => randomQuote());
+  const [brute, setBrute] = useState(() => randomBrute());
+  useEffect(() => {
+    if (!reward) return;
+    setQuote(randomQuote());
+    setBrute(randomBrute());
+  }, [reward]);
+  const now = useMemo(() => new Date(), [reward]); // eslint-disable-line react-hooks/exhaustive-deps
+  const stamp = `${String(now.getDate()).padStart(2, "0")} ${months[now.getMonth()]} 1986`;
+
+  const blink = useSharedValue(1);
+  const shake = useSharedValue(0);
+  useEffect(() => {
+    if (!reward || !animate) {
+      cancelAnimation(blink);
+      blink.value = 1;
+      return;
+    }
+    blink.value = withRepeat(withTiming(0.15, { duration: 520 }), -1, true);
+    shake.value = withSequence(
+      withTiming(-3, { duration: 50 }),
+      withTiming(3, { duration: 50 }),
+      withTiming(-2, { duration: 50 }),
+      withTiming(1, { duration: 50 }),
+      withTiming(0, { duration: 60 }),
+    );
+    return () => cancelAnimation(blink);
+  }, [reward, animate, blink, shake]);
+  const rec = useAnimatedStyle(() => ({ opacity: blink.value }));
+  const glitch = useAnimatedStyle(() => ({
+    transform: [{ translateX: shake.value }],
+  }));
+
   return (
     <Modal
       transparent
+      statusBarTranslucent
       visible={!!reward}
       animationType={animate ? "fade" : "none"}
       onRequestClose={closeReward}
     >
       <View
-        style={{
-          flex: 1,
-          backgroundColor: c.overlay,
-          justifyContent: "center",
-          padding: 22,
-        }}
+        style={{ flex: 1, backgroundColor: neon.night }}
+        accessibilityViewIsModal
       >
-        <Animated.View
-          entering={animate ? ZoomIn.springify().damping(14) : undefined}
-          accessibilityViewIsModal
-          style={[
-            styles.card,
-            {
-              borderColor: c.accent,
-              backgroundColor: c.surfaceRaised,
-              maxWidth: 440,
-              maxHeight: "95%",
-              width: "100%",
-              alignSelf: "center",
-              gap: 22,
-            },
-          ]}
+        <Synthwave animate={animate} />
+        <Scanlines opacity={0.22} />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingTop: insets.top + 14,
+            paddingBottom: insets.bottom + 24,
+            paddingHorizontal: 20,
+            gap: 16,
+            width: "100%",
+            maxWidth: 460,
+            alignSelf: "center",
+          }}
         >
-          <ScrollView
-            contentContainerStyle={{ gap: 22 }}
-            showsVerticalScrollIndicator={false}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
           >
-            {animate && reward && <Confetti key={reward} />}
-            <AppText
-              variant="micro"
-              tone="accent"
-              style={{ textAlign: "center" }}
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
             >
-              ✦ MISSION COMPLETE ✦
+              <Animated.View
+                style={[
+                  {
+                    width: 9,
+                    height: 9,
+                    borderRadius: 5,
+                    backgroundColor: "#FF2D2D",
+                  },
+                  rec,
+                ]}
+              />
+              <AppText
+                style={{
+                  fontFamily: fonts.mono,
+                  fontSize: 12,
+                  color: "#FFFFFF",
+                }}
+              >
+                REC
+              </AppText>
+            </View>
+            <AppText
+              style={{
+                fontFamily: fonts.mono,
+                fontSize: 12,
+                color: "#FFFFFF",
+                ...glow(neon.cyan),
+              }}
+            >
+              SP ▶ {stamp}
             </AppText>
-            <PixelTitle />
-            <Character index={index} animated={animate} variant={reaction} />
-            <AppText variant="title" style={{ textAlign: "center" }}>
+          </View>
+
+          <Animated.View style={glitch}>
+            <PixelTitle chrome />
+          </Animated.View>
+          <AppText
+            style={{
+              fontFamily: fonts.mono,
+              fontSize: 13,
+              letterSpacing: 4,
+              textAlign: "center",
+              color: neon.cyan,
+              ...glow(neon.cyan),
+            }}
+          >
+            ★ MISSION COMPLETE ★
+          </AppText>
+
+          <Animated.View
+            entering={animate ? ZoomIn.springify().damping(14) : undefined}
+          >
+            <RetroTV
+              query={brute}
+              fallback={index}
+              channel={String(reaction + 1).padStart(2, "0")}
+            />
+          </Animated.View>
+
+          <View
+            style={{
+              alignItems: "center",
+              gap: 4,
+              paddingVertical: 14,
+              paddingHorizontal: 16,
+              borderRadius: radius.lg,
+              backgroundColor: "#12062AE6",
+              borderWidth: 1,
+              borderColor: `${neon.cyan}44`,
+            }}
+          >
+            <AppText
+              style={{
+                fontFamily: fonts.mono,
+                fontSize: 11,
+                color: neon.sun,
+                letterSpacing: 2,
+              }}
+            >
+              NOVA CONQUISTA DESBLOQUEADA
+            </AppText>
+            <AppText
+              accessibilityRole="header"
+              style={{
+                fontFamily: fonts.bold,
+                fontSize: 30,
+                lineHeight: 36,
+                color: "#FFFFFF",
+                textAlign: "center",
+                ...glow(neon.pink),
+              }}
+            >
               {badge?.title}
             </AppText>
-            <AppText tone="muted" style={{ textAlign: "center" }}>
+            <AppText
+              style={{ fontSize: 14, color: "#E6D9FF", textAlign: "center" }}
+            >
               {lines[reaction]}
             </AppText>
+          </View>
+
+          <Animated.View
+            key={quote.id}
+            entering={animate ? FadeIn.duration(350) : undefined}
+            style={{
+              padding: 16,
+              gap: 8,
+              borderRadius: radius.lg,
+              backgroundColor: "#12062AE6",
+              borderWidth: 1,
+              borderColor: `${neon.pink}66`,
+            }}
+          >
             <AppText
-              variant="micro"
-              tone="subtle"
-              style={{ textAlign: "center" }}
+              style={{
+                fontFamily: fonts.mono,
+                fontSize: 10,
+                color: neon.pink,
+                letterSpacing: 2,
+              }}
             >
-              {names[index]}
-              {" // REAÇÃO ORIGINAL"}
+              {"// FITA "}
+              {quote.kind.toUpperCase()}
             </AppText>
-            <Button
-              title="CONTINUAR"
-              icon="arrow-forward"
-              onPress={closeReward}
+            <AppText
+              style={{
+                fontFamily: fonts.bold,
+                fontSize: 19,
+                lineHeight: 26,
+                color: "#FFFFFF",
+              }}
+            >
+              “{quote.text}”
+            </AppText>
+            <AppText
+              style={{
+                fontFamily: fonts.mono,
+                fontSize: 11,
+                lineHeight: 16,
+                color: "#B9A6D8",
+              }}
+            >
+              {quote.original}
+            </AppText>
+            <AppText style={{ fontSize: 12, color: neon.sun }}>
+              — {credit(quote)}
+            </AppText>
+          </Animated.View>
+
+          <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
+            <NeonButton
+              ghost
+              title="◀◀ OUTRA FITA"
+              onPress={() => {
+                haptic("select");
+                setQuote(randomQuote(quote.id));
+                setBrute(randomBrute());
+              }}
             />
-          </ScrollView>
-        </Animated.View>
+            <NeonButton title="CONTINUAR" onPress={closeReward} />
+          </View>
+          <AppText
+            style={{
+              fontFamily: fonts.mono,
+              fontSize: 9,
+              color: "#8C7BA8",
+              textAlign: "center",
+            }}
+          >
+            {characterNames[index]} {"// TUPINIPLANNER VIDEO CLUB"}
+          </AppText>
+        </ScrollView>
       </View>
     </Modal>
   );
