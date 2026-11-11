@@ -1,20 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 import {
   AppCard,
   AppText,
   Button,
   Field,
-  Icon,
+  IconTile,
+  Pill,
+  ProgressBar,
   Screen,
+  ScreenHeader,
   SectionHeader,
   styles,
 } from "../../src/components/ui";
+import { categoryColors, colors as c } from "../../src/theme/tokens";
 import { useApp, uuid } from "../../src/features/AppProvider";
 import { dayTasks, setStatus, weekStart } from "../../src/domain/planner";
 import { elapsedSeconds } from "../../src/domain/timer";
 import { numberInput } from "../../src/utils/input";
 import { LogMission } from "../../src/features/LogMission";
+const guitarColor = categoryColors.guitar;
 const blockNames = [
   "Aquecimento",
   "Técnica",
@@ -22,7 +28,7 @@ const blockNames = [
   "Prática livre",
 ];
 export default function Guitar() {
-  const { state, today, mutate, run, busy, celebrate } = useApp();
+  const { state, today, mutate, run, busy, celebrate, notify } = useApp();
   const settings = state.settings[0]!;
   const timer = settings.guitarTimer;
   const [now, setNow] = useState(Date.now());
@@ -35,7 +41,6 @@ export default function Guitar() {
   const [editing, setEditing] = useState(false);
   const [blocks, setBlocks] = useState(settings.guitarBlocks.map(String));
   const [goal, setGoal] = useState(String(settings.guitarWeeklyGoal));
-  const [saved, setSaved] = useState(false);
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 500);
     return () => clearInterval(interval);
@@ -44,6 +49,12 @@ export default function Guitar() {
   const target = timer?.targetSeconds ?? settings.guitarMinutes * 60;
   const remaining = Math.max(0, Math.ceil(target - seconds));
   const running = timer?.startedAt !== undefined && remaining > 0;
+  const ratio = target ? Math.min(1, seconds / target) : 0;
+  const ring = 2 * Math.PI * 100;
+  const offsets = settings.guitarBlocks.map((_, i) =>
+    settings.guitarBlocks.slice(0, i).reduce((a, b) => a + b * 60, 0),
+  );
+  const block = offsets.reduce((cur, o, i) => (seconds >= o ? i : cur), 0);
   const startPause = () =>
     run(() =>
       mutate((s) => {
@@ -90,7 +101,7 @@ export default function Guitar() {
       setSelected("");
       setManual("");
       setNotes("");
-      setSaved(true);
+      notify("Prática registrada. Mais um riff na sua história.");
       if (awards[0]) celebrate(awards[0]);
     });
   const savePlan = () =>
@@ -113,59 +124,127 @@ export default function Guitar() {
   );
   return (
     <Screen>
-      <AppText variant="micro" tone="accent">
-        CORDAS EM CHAMAS
-      </AppText>
-      <AppText variant="title">Dê play na evolução.</AppText>
-      <AppText tone="muted">
-        Um riff por vez. Precisão antes de velocidade.
-      </AppText>
-      <AppCard>
-        <View style={styles.row}>
-          <Icon name="musical-notes-outline" />
-          <AppText variant="heading">Sua sessão de prática</AppText>
-        </View>
-        <AppText
-          variant="big"
-          style={{
-            textAlign: "center",
-            marginVertical: 12,
-            fontVariant: ["tabular-nums"],
-          }}
-        >
-          {String(Math.floor(remaining / 60)).padStart(2, "0")}:
-          {String(remaining % 60).padStart(2, "0")}
-        </AppText>
-        <AppText variant="micro" tone="green" style={{ textAlign: "center" }}>
-          {remaining === 0
-            ? "SESSÃO CONCLUÍDA · SALVE SEU REGISTRO"
-            : running
-              ? "NO SEU RITMO. SEM PRESSA."
-              : timer
-                ? "PAUSADO · SUA PRÁTICA ESTÁ GUARDADA"
-                : `${settings.guitarMinutes} MINUTOS PARA A SUA MÚSICA`}
-        </AppText>
-        <Button
-          title={running ? "PAUSAR" : timer ? "CONTINUAR" : "INICIAR SESSÃO"}
-          icon={running ? "pause-outline" : "play-outline"}
-          onPress={startPause}
-          disabled={busy || remaining === 0}
-        />
-        <AppText tone="muted">
-          O timer continua durante o bloqueio da tela. Pause ao interromper a
-          prática.
-        </AppText>
-        {settings.guitarBlocks.map((min, i) => (
+      <ScreenHeader
+        eyebrow="CORDAS EM CHAMAS"
+        tone="accent"
+        title="Dê play na evolução."
+        subtitle="Um riff por vez. Precisão antes de velocidade."
+      />
+      <AppCard variant="hero" corners style={{ alignItems: "stretch" }}>
+        <View style={{ alignItems: "center", paddingVertical: 6 }}>
           <View
-            key={i}
-            style={[styles.row, { justifyContent: "space-between" }]}
+            accessible
+            accessibilityRole="timer"
+            accessibilityLabel={`${Math.floor(remaining / 60)} minutos e ${remaining % 60} segundos restantes`}
+            style={{
+              width: 230,
+              height: 230,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            <AppText tone="muted">
-              0{i + 1} {blockNames[i]}
+            <Svg width={230} height={230} style={StyleSheet.absoluteFill}>
+              <Circle
+                cx={115}
+                cy={115}
+                r={100}
+                stroke={c.line}
+                strokeWidth={10}
+                strokeDasharray="2 5"
+                fill="none"
+              />
+              {ratio > 0 && (
+                <Circle
+                  cx={115}
+                  cy={115}
+                  r={100}
+                  stroke={remaining === 0 ? c.primary : guitarColor}
+                  strokeWidth={10}
+                  strokeLinecap="round"
+                  strokeDasharray={`${ring} ${ring}`}
+                  strokeDashoffset={ring * (1 - ratio)}
+                  rotation={-90}
+                  origin="115,115"
+                  fill="none"
+                />
+              )}
+            </Svg>
+            <AppText variant="micro" tone="subtle">
+              {remaining === 0
+                ? "FINALIZADA"
+                : running
+                  ? "TOCANDO"
+                  : timer
+                    ? "PAUSADO"
+                    : "PRONTO"}
             </AppText>
-            <AppText>{min} min</AppText>
+            <AppText
+              variant="display"
+              style={{ fontVariant: ["tabular-nums"] }}
+            >
+              {String(Math.floor(remaining / 60)).padStart(2, "0")}:
+              {String(remaining % 60).padStart(2, "0")}
+            </AppText>
+            <AppText variant="micro" style={{ color: guitarColor }}>
+              {timer
+                ? blockNames[block]!.toUpperCase()
+                : `${settings.guitarMinutes} MIN`}
+            </AppText>
           </View>
-        ))}
+        </View>
+        <View style={{ flexDirection: "row", gap: 4 }}>
+          {settings.guitarBlocks.map((min, i) => (
+            <View key={i} style={{ flex: min, gap: 6 }}>
+              <View
+                style={{
+                  height: 6,
+                  borderRadius: 2,
+                  backgroundColor: c.line,
+                  overflow: "hidden",
+                }}
+              >
+                <View
+                  style={{
+                    height: "100%",
+                    width: `${Math.max(0, Math.min(1, (seconds - offsets[i]!) / (min * 60))) * 100}%`,
+                    backgroundColor: guitarColor,
+                  }}
+                />
+              </View>
+              <AppText
+                variant="micro"
+                numberOfLines={1}
+                style={{
+                  fontSize: 9,
+                  color: timer && i === block ? guitarColor : c.subtle,
+                }}
+              >
+                {min}′ {blockNames[i]!.split(" ")[0]}
+              </AppText>
+            </View>
+          ))}
+        </View>
+        <View style={[styles.row, { flexWrap: "nowrap" }]}>
+          <Button
+            title={
+              remaining === 0
+                ? "SALVE ABAIXO"
+                : running
+                  ? "PAUSAR"
+                  : timer
+                    ? "CONTINUAR"
+                    : "INICIAR SESSÃO"
+            }
+            icon={running ? "pause" : "play"}
+            size="lg"
+            onPress={startPause}
+            disabled={busy || remaining === 0}
+            style={{ flex: 1 }}
+          />
+        </View>
+        <AppText variant="small" tone="subtle" style={{ textAlign: "center" }}>
+          O timer continua com a tela bloqueada. Pause ao interromper.
+        </AppText>
         <Button
           title="Editar sessão e meta semanal"
           secondary
@@ -199,15 +278,31 @@ export default function Guitar() {
         )}
       </AppCard>
       <AppCard>
-        <AppText variant="heading">
-          {weekly.length} / {settings.guitarWeeklyGoal} sessões nesta semana
-        </AppText>
-        <AppText tone="muted">
-          {Math.round(weekly.reduce((a, b) => a + b.durationMinutes, 0))}{" "}
-          minutos de música. A meta é uma referência, não uma obrigação.
-        </AppText>
+        <View style={[styles.row, { flexWrap: "nowrap" }]}>
+          <IconTile icon="flame" color={c.accent} />
+          <View style={{ flex: 1 }}>
+            <AppText variant="heading">
+              {weekly.length}
+              <AppText variant="label" tone="subtle">
+                {" "}
+                / {settings.guitarWeeklyGoal} sessões na semana
+              </AppText>
+            </AppText>
+            <AppText variant="small" tone="subtle">
+              {Math.round(weekly.reduce((a, b) => a + b.durationMinutes, 0))}{" "}
+              min de música · meta é referência, não obrigação
+            </AppText>
+          </View>
+        </View>
+        <ProgressBar
+          value={weekly.length}
+          total={settings.guitarWeeklyGoal}
+          segments={settings.guitarWeeklyGoal}
+          height={8}
+          color={c.accent}
+        />
       </AppCard>
-      <SectionHeader title="Guarde o que você tocou" />
+      <SectionHeader eyebrow="REGISTRO" title="Guarde o que você tocou" />
       <Field
         label="Técnica (opcional)"
         value={technique}
@@ -242,13 +337,13 @@ export default function Guitar() {
         selected={selected}
         onSelect={setSelected}
       />
-      <Button title="FINALIZAR E SALVAR" onPress={finish} disabled={busy} />
-      {saved && (
-        <AppText tone="green" accessibilityLiveRegion="polite">
-          Prática registrada. Mais um riff na sua história.
-        </AppText>
-      )}
-      <SectionHeader title="Últimas sessões" />
+      <Button
+        title="FINALIZAR E SALVAR"
+        icon="save"
+        onPress={finish}
+        disabled={busy}
+      />
+      <SectionHeader eyebrow="HISTÓRICO" title="Últimas sessões" />
       {!state.guitar.length && (
         <AppText tone="muted">
           Seu histórico começa com a primeira prática.
@@ -259,14 +354,35 @@ export default function Guitar() {
         .reverse()
         .slice(0, 30)
         .map((g) => (
-          <AppCard key={g.id}>
-            <AppText>{g.repertoire || g.technique || "Prática livre"}</AppText>
-            <AppText variant="micro" tone="muted">
-              {g.localDate} · {g.durationMinutes} min
-              {g.bpm ? ` · ${g.bpm} BPM` : ""}
-            </AppText>
-            {!!g.technique && <AppText>{g.technique}</AppText>}
-            {!!g.notes && <AppText tone="muted">{g.notes}</AppText>}
+          <AppCard
+            key={g.id}
+            accent={guitarColor}
+            style={{ paddingLeft: 16, gap: 6 }}
+          >
+            <View style={[styles.row, { justifyContent: "space-between" }]}>
+              <AppText variant="label" style={{ flex: 1 }}>
+                {g.repertoire || g.technique || "Prática livre"}
+              </AppText>
+              <AppText variant="micro" tone="subtle">
+                {g.localDate.split("-").reverse().join("/")}
+              </AppText>
+            </View>
+            <View style={[styles.row, { gap: 6 }]}>
+              <Pill
+                icon="time-outline"
+                label={`${Math.round(g.durationMinutes)} MIN`}
+                color={guitarColor}
+              />
+              {!!g.bpm && <Pill icon="pulse" label={`${g.bpm} BPM`} />}
+            </View>
+            {!!g.technique && g.repertoire && (
+              <AppText variant="small">{g.technique}</AppText>
+            )}
+            {!!g.notes && (
+              <AppText variant="small" tone="muted">
+                {g.notes}
+              </AppText>
+            )}
           </AppCard>
         ))}
     </Screen>
