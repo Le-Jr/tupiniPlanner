@@ -27,12 +27,7 @@ import {
 } from "../../src/domain/planner";
 import { categoryColors, colors as c, fonts } from "../../src/theme/tokens";
 import { MissionRow } from "../../src/components/MissionRow";
-const quotes = [
-  "O próximo passo não precisa ser épico. Precisa ser possível.",
-  "Organização primeiro. Consistência depois.",
-  "Um riff por vez. Precisão antes de velocidade.",
-  "O plano não acabou. Ajuste a rota e volte quando puder.",
-];
+import { quoteOfDay } from "../../src/domain/quotes";
 const fronts = [
   {
     title: "Movimento",
@@ -76,7 +71,7 @@ export default function Today() {
     .filter((t) => t.status === "pending")
     .sort((a, b) => (a.localTime ?? "99").localeCompare(b.localTime ?? "99"));
   const next = pending[0];
-  const quote = quotes[Number(today.replaceAll("-", "")) % quotes.length];
+  const quote = quoteOfDay(today);
   const name = state.profiles[0]?.displayName?.split(" ")[0];
   const settings = state.settings[0];
   const complete = p.total > 0 && p.done === p.total;
@@ -155,7 +150,10 @@ export default function Today() {
                     : "Hoje é uma chance."}
             </AppText>
             <AppText tone="muted" variant="small">
-              {quote}
+              “{quote.text}”
+            </AppText>
+            <AppText variant="micro" tone="accent" style={{ fontSize: 9.5 }}>
+              {quote.who} · {quote.work} ({quote.year})
             </AppText>
           </View>
         </View>
